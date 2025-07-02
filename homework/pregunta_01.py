@@ -5,6 +5,18 @@
 Escriba el codigo que ejecute la accion solicitada en cada pregunta.
 """
 
+import os
+import pandas as pd
+import glob
+
+def leer_archivos(carpeta, sentimiento):
+    frases = []
+    archivos = glob.glob(os.path.join(carpeta, sentimiento, "*.txt"))
+    for archivo in archivos:
+        with open(archivo, encoding="utf-8") as f:
+            linea = f.read().strip()
+            frases.append({"phrase": linea, "target": sentimiento})
+    return frases
 
 def pregunta_01():
     """
@@ -71,3 +83,29 @@ def pregunta_01():
 
 
     """
+    
+    base_path = "files/input"
+    output_path = "files/output"
+
+    # Crear datasets
+    test_dataset = []
+    train_dataset = []
+
+    for sentimiento in ["positive", "neutral", "negative"]:
+        test_dataset.extend(leer_archivos(os.path.join(base_path, "test"), sentimiento))
+        train_dataset.extend(leer_archivos(os.path.join(base_path, "train"), sentimiento))
+
+    # Convertir a DataFrame
+    test_df = pd.DataFrame(test_dataset)
+    train_df = pd.DataFrame(train_dataset)
+
+    # Crear carpeta de salida limpia
+    if os.path.exists(output_path):
+        for archivo in glob.glob(os.path.join(output_path, "*")):
+            os.remove(archivo)
+        os.rmdir(output_path)
+    os.makedirs(output_path)
+
+    # Guardar los CSV
+    test_df.to_csv(os.path.join(output_path, "test_dataset.csv"), index=False)
+    train_df.to_csv(os.path.join(output_path, "train_dataset.csv"), index=False)
